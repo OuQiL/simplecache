@@ -8,7 +8,6 @@ import (
 
 const (
 	headerSize  = 14
-	keyLenOff   = 0
 	valueLenOff = 2
 	expireAtOff = 6
 	keyDataOff  = 14
@@ -23,6 +22,7 @@ type shard struct {
 	entries   map[uint64]uint32
 	onEvicted func(key string, value []byte)
 	totalSize uint32
+	sf        sf
 }
 
 func newShard(maxBytesPerShard int, onEvicted func(key string, value []byte)) *shard {
@@ -179,8 +179,12 @@ func (s *shard) readValue(pos uint32, keyLen, valueLen int) []byte {
 	copy(value, s.data[start:start+uint32(valueLen)])
 	return value
 }
-
 func (s *shard) get(key string, hash uint64) ([]byte, bool) {
+	return s.sf.Do(key, hash, func() ([]byte, bool) {
+		return s.getOnce(key, hash)
+	})
+}
+func (s *shard) getOnce(key string, hash uint64) ([]byte, bool) {
 	s.RLock()
 	defer s.RUnlock()
 

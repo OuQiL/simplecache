@@ -3,7 +3,7 @@
 ## 安装
 
 ```bash
-go get github.com/OuQiL/simplecache
+go get github.com/OuQiL/simplecache/cache
 ```
 
 ## 快速开始
@@ -12,39 +12,48 @@ go get github.com/OuQiL/simplecache
 package main
 
 import (
-    "fmt"
-    "time"
-    
-    "github.com/OuQiL/simplecache"
+	"fmt"
+
+	"time"
+
+	"github.com/OuQiL/simplecache/cache"
 )
 
 func main() {
-    // 创建缓存实例
-    config := simplecache.DefaultConfig(time.Minute)
-    cache, err := simplecache.New(config)
-    if err != nil {
-        panic(err)
-    }
-    defer cache.Close()
+	// 创建缓存实例
+	config := cache.DefaultConfig(time.Minute)
+	cache, err := cache.New(config)
+	if err != nil {
+		panic(err)
+	}
+	defer cache.Close()
 
-    // 写入数据
-    cache.Set("user:1", []byte("Alice"))
-    
-    // 读取数据
-    value, found := cache.Get("user:1")
-    if found {
-        fmt.Println(string(value)) // Alice
-    }
+	// 写入数据
+	cache.Set("user:1", []byte("Alice"))
 
-    // 设置带 TTL 的数据（100ms 后过期）
-    cache.SetWithTTL("token:abc", []byte("xyz"), 100*time.Millisecond)
-    
-    // 删除数据
-    cache.Delete("user:1")
-    
-    // 查看统计
-    fmt.Println(cache.Stats()) // {TotalEntries: 1, ShardCount: 256}
+	// 读取数据
+	value, found := cache.Get("user:1")
+	if found {
+		fmt.Println(string(value)) // Alice
+	}
+	fmt.Println("1:", cache.Stats()) // {TotalEntries: 1, ShardCount: 256}
+	// 设置带 TTL 的数据（100ms 后过期）
+	cache.SetWithTTL("token:abc", []byte("xyz"), 100*time.Millisecond)
+	value, found = cache.Get("token:abc")
+	if found {
+		fmt.Println(string(value)) // Alice
+	}
+	fmt.Println("2:", cache.Stats()) // {2 256}
+	// 删除数据
+	cache.Delete("user:1")
+	fmt.Println("3:", cache.Stats()) // {1 256}
+	time.Sleep(100 * time.Millisecond)
+	value, found = cache.Get("token:abc")
+	if !found {
+		fmt.Println("not found") // Alice
+	}
 }
+
 ```
 
 ## 配置说明
