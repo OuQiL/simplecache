@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"simplecache/consistenthash"
+	"github.com/OuQiL/simplecache/consistenthash"
 )
 
 type HTTPPool struct {

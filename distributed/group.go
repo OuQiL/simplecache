@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"simplecache/cache"
+	"github.com/OuQiL/simplecache/cache"
 )
 
 var (
