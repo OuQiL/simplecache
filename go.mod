@@ -1,4 +1,4 @@
-module simplecache
+module github.com/OuQiL/simplecache
 
 go 1.21
 
