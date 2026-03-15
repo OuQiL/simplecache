@@ -124,20 +124,61 @@ shard (单个分片)
 - ❌ 需要持久化的数据
 - ❌ 需要遍历所有 key 的场景
 
-## 与其他库对比
-
-| 特性 | SimpleCache | BigCache | FreeCache |
-|------|-------------|-----------|------------|
-| 分片 | 256 | 1024 | 32 |
-| 压缩 | ❌ | ✅ | ❌ |
-| 持久化 | ❌ | ✅ | ✅ |
-| GC 压力 | 低 | 中 | 低 |
-| 代码复杂度 | 低 | 高 | 中 |
 
 ## 性能测试
-
+### 基础性能测试
 ```bash
-go test -bench=. -benchmem
+go run benchmark/bench.go -mode bench -peers localhost:8001,localhost:8002,localhost:8003 -concurrency 50 -requests 10000
+```
+```bash
+开始压测，并发数: 50, 请求数: 10000
+测试节点: [localhost:8001 localhost:8002 localhost:8003]
+预热中...
+
+=== 压测报告 ===
+总请求数: 10000
+成功请求: 10000 (100.00%)
+失败请求: 0 (0.00%)
+总耗时: 719.3417ms
+QPS: 13901.60
+平均延迟: 2.150533ms
+=== 测试完成 ===
+```
+
+### 高并发测试
+```bash
+go run benchmark/bench.go -mode bench -peers localhost:8001,localhost:8002,localhost:8003 -concurrency 1000 -requests 50000
+```
+```bash
+开始压测，并发数: 1000, 请求数: 50000
+测试节点: [localhost:8001 localhost:8002 localhost:8003]
+预热中...
+
+=== 压测报告 ===
+总请求数: 50000
+成功请求: 49658 (99.32%)
+失败请求: 342 (0.68%)
+总耗时: 12.8404748s
+QPS: 3893.94
+平均延迟: 168.81537ms
+=== 测试完成 ===
+```
+
+### 单点性能测试
+```bash
+go run benchmark/bench.go -mode bench -peers localhost:8001 -concurrency 2000 -requests 50000
+开始压测，并发数: 2000, 请求数: 50000
+测试节点: [localhost:8001]
+预热中...
+
+=== 压测报告 ===
+总请求数: 50000
+成功请求: 48962 (97.92%)
+失败请求: 1038 (2.08%)
+总耗时: 8.7577248s
+QPS: 5709.25
+平均延迟: 347.066404ms
+=== 测试完成 ===
 ```
 
 ## 注意事项
@@ -147,6 +188,3 @@ go test -bench=. -benchmem
 3. **单条数据不能超过分片大小**
 4. **建议设置合理的 TTL**，配合 CleanInterval 清理过期数据
 
-## 许可证
-
-MIT License

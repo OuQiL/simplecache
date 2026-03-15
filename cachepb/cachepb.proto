@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package cachepb;
+
+option go_package = ".";
+
+message Request {
+  string key = 1;
+}
+
+message Response {
+  bytes value = 1;
+}
+
+service Cache {
+  rpc Get(Request) returns (Response);
+}
