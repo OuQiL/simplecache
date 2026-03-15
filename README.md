@@ -52,9 +52,10 @@ func main() {
 		fmt.Println("not found") // Alice
 	}
 }
+
+```
 ### 2.分布式缓存使用
 见quickstart
-```
 
 ## 配置说明
 
