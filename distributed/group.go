@@ -3,6 +3,7 @@ package distributed
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/OuQiL/simplecache/cache"
 )
@@ -95,7 +96,12 @@ func (g *Group) RegisterPeers(peers PeerPicker) {
 	}
 	g.peers = peers
 }
-
+func (g *Group) Set(key string, value []byte) error {
+	return g.mainCache.SetWithTTL(key, value, 0)
+}
+func (g *Group) SetWithTTL(key string, value []byte, TTL time.Duration) error {
+	return g.mainCache.SetWithTTL(key, value, TTL)
+}
 func (g *Group) Get(key string) (ByteView, error) {
 	if key == "" {
 		return ByteView{}, errors.New("key is required")

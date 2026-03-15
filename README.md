@@ -1,13 +1,12 @@
 # SimpleCache
 
-## 安装
 
+
+## 快速开始
+### 1.本地缓存使用
 ```bash
 go get github.com/OuQiL/simplecache/cache
 ```
-
-## 快速开始
-
 ```go
 package main
 
@@ -53,7 +52,8 @@ func main() {
 		fmt.Println("not found") // Alice
 	}
 }
-
+### 2.分布式缓存使用
+见quickstart
 ```
 
 ## 配置说明
