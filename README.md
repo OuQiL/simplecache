@@ -56,6 +56,38 @@ func main() {
 ```
 ### 2.分布式缓存使用
 见quickstart
+```bash
+go get github.com/OuQiL/simplecache/distributed
+```
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/OuQiL/simplecache/distributed"
+)
+
+func aFunc(key string) ([]byte, error) {
+	return []byte("getter"), nil
+}
+
+func main() {
+	// Init
+	group := distributed.NewGroup("name", 10<<20, distributed.GetterFunc(aFunc))
+	pool := distributed.NewHTTPPool("http://localhost:8001")
+	pool.Set("http://localhost:8001", "http://localhost:8002")
+	group.RegisterPeers(pool)
+	// 命中回调
+	val, _ := group.Get("Key1")
+	fmt.Println(val) //"getter"
+	// Set
+	group.Set("Key2", []byte("value-true"))
+	val, _ = group.Get("Key2")
+	fmt.Println(val) //value-true"
+}
+
+```
 
 ## 配置说明
 

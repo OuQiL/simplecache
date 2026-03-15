@@ -1,11 +1,13 @@
 package distributed
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"time"
 
 	"github.com/OuQiL/simplecache/cache"
+	"github.com/OuQiL/simplecache/cachepb/cachepb"
 )
 
 var (
@@ -38,6 +40,7 @@ type Group struct {
 	getter    Getter
 	mainCache *cache.Cache
 	peers     PeerPicker
+	timeout   time.Duration
 }
 
 type Getter interface {
@@ -50,9 +53,12 @@ func (f GetterFunc) Get(key string) ([]byte, error) {
 	return f(key)
 }
 
-func NewGroup(name string, cacheBytes int64, getter Getter) *Group {
+func NewGroup(name string, cacheBytes int64, timeout time.Duration, getter Getter) *Group {
 	if getter == nil {
 		panic("nil Getter")
+	}
+	if timeout <= 0 {
+		panic("group timeout should >0")
 	}
 	mu.Lock()
 	defer mu.Unlock()
@@ -61,6 +67,7 @@ func NewGroup(name string, cacheBytes int64, getter Getter) *Group {
 		name:      name,
 		getter:    getter,
 		mainCache: createCache(cacheBytes),
+		timeout:   timeout,
 	}
 	groups[name] = g
 	return g
@@ -96,16 +103,23 @@ func (g *Group) RegisterPeers(peers PeerPicker) {
 	}
 	g.peers = peers
 }
-func (g *Group) Set(key string, value []byte) error {
+func (g *Group) Set(ctx context.Context, key string, value []byte) error {
+	ctx, cancel := context.WithTimeout(ctx, g.timeout)
+	defer cancel()
 	return g.mainCache.SetWithTTL(key, value, 0)
 }
-func (g *Group) SetWithTTL(key string, value []byte, TTL time.Duration) error {
+func (g *Group) SetWithTTL(ctx context.Context, key string, value []byte, TTL time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, g.timeout)
+	defer cancel()
 	return g.mainCache.SetWithTTL(key, value, TTL)
 }
-func (g *Group) Get(key string) (ByteView, error) {
+func (g *Group) Get(ctx context.Context, key string) (ByteView, error) {
 	if key == "" {
 		return ByteView{}, errors.New("key is required")
 	}
+
+	ctx, cancel := context.WithTimeout(ctx, g.timeout)
+	defer cancel()
 
 	if g.mainCache != nil {
 		if v, ok := g.mainCache.Get(key); ok {
@@ -113,13 +127,13 @@ func (g *Group) Get(key string) (ByteView, error) {
 		}
 	}
 
-	return g.load(key)
+	return g.load(ctx, key)
 }
 
-func (g *Group) load(key string) (value ByteView, err error) {
+func (g *Group) load(ctx context.Context, key string) (value ByteView, err error) {
 	if g.peers != nil {
 		if peer, ok := g.peers.PickPeer(key); ok {
-			value, err = g.getFromPeer(peer, key)
+			value, err = g.getFromPeer(ctx, peer, key)
 			if err == nil {
 				return value, nil
 			}
@@ -129,8 +143,18 @@ func (g *Group) load(key string) (value ByteView, err error) {
 	return g.getLocally(key)
 }
 
-func (g *Group) getFromPeer(peer PeerGetter, key string) (ByteView, error) {
-	bytes, err := peer.Get(g.name, key)
+func (g *Group) getFromPeer(ctx context.Context, peer PeerGetter, key string) (ByteView, error) {
+	in := &cachepb.GetRequest{
+		Group: g.name,
+		Key:   key,
+	}
+
+	select {
+	case <-ctx.Done():
+		return ByteView{}, ctx.Err()
+	default:
+	}
+	bytes, err := peer.Get(ctx, in, &cachepb.GetResponse{})
 	if err != nil {
 		return ByteView{}, err
 	}

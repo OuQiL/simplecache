@@ -21,27 +21,28 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type Request struct {
+type GetRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Group         string                 `protobuf:"bytes,2,opt,name=group,proto3" json:"group,omitempty"`
 	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Request) Reset() {
-	*x = Request{}
+func (x *GetRequest) Reset() {
+	*x = GetRequest{}
 	mi := &file_cachepb_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Request) String() string {
+func (x *GetRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Request) ProtoMessage() {}
+func (*GetRequest) ProtoMessage() {}
 
-func (x *Request) ProtoReflect() protoreflect.Message {
+func (x *GetRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_cachepb_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -53,39 +54,46 @@ func (x *Request) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Request.ProtoReflect.Descriptor instead.
-func (*Request) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetRequest.ProtoReflect.Descriptor instead.
+func (*GetRequest) Descriptor() ([]byte, []int) {
 	return file_cachepb_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Request) GetKey() string {
+func (x *GetRequest) GetGroup() string {
+	if x != nil {
+		return x.Group
+	}
+	return ""
+}
+
+func (x *GetRequest) GetKey() string {
 	if x != nil {
 		return x.Key
 	}
 	return ""
 }
 
-type Response struct {
+type GetResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Value         []byte                 `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Response) Reset() {
-	*x = Response{}
+func (x *GetResponse) Reset() {
+	*x = GetResponse{}
 	mi := &file_cachepb_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Response) String() string {
+func (x *GetResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Response) ProtoMessage() {}
+func (*GetResponse) ProtoMessage() {}
 
-func (x *Response) ProtoReflect() protoreflect.Message {
+func (x *GetResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_cachepb_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -97,12 +105,12 @@ func (x *Response) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Response.ProtoReflect.Descriptor instead.
-func (*Response) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetResponse.ProtoReflect.Descriptor instead.
+func (*GetResponse) Descriptor() ([]byte, []int) {
 	return file_cachepb_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *Response) GetValue() []byte {
+func (x *GetResponse) GetValue() []byte {
 	if x != nil {
 		return x.Value
 	}
@@ -113,13 +121,15 @@ var File_cachepb_proto protoreflect.FileDescriptor
 
 const file_cachepb_proto_rawDesc = "" +
 	"\n" +
-	"\rcachepb.proto\x12\acachepb\"\x1b\n" +
-	"\aRequest\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\" \n" +
-	"\bResponse\x12\x14\n" +
-	"\x05value\x18\x01 \x01(\fR\x05value23\n" +
-	"\x05Cache\x12*\n" +
-	"\x03Get\x12\x10.cachepb.Request\x1a\x11.cachepb.ResponseB\x03Z\x01.b\x06proto3"
+	"\rcachepb.proto\x12\acachepb\"4\n" +
+	"\n" +
+	"GetRequest\x12\x14\n" +
+	"\x05group\x18\x02 \x01(\tR\x05group\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\"#\n" +
+	"\vGetResponse\x12\x14\n" +
+	"\x05value\x18\x01 \x01(\fR\x05value29\n" +
+	"\x05Cache\x120\n" +
+	"\x03Get\x12\x13.cachepb.GetRequest\x1a\x14.cachepb.GetResponseB\vZ\t./cachepbb\x06proto3"
 
 var (
 	file_cachepb_proto_rawDescOnce sync.Once
@@ -135,12 +145,12 @@ func file_cachepb_proto_rawDescGZIP() []byte {
 
 var file_cachepb_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_cachepb_proto_goTypes = []any{
-	(*Request)(nil),  // 0: cachepb.Request
-	(*Response)(nil), // 1: cachepb.Response
+	(*GetRequest)(nil),  // 0: cachepb.GetRequest
+	(*GetResponse)(nil), // 1: cachepb.GetResponse
 }
 var file_cachepb_proto_depIdxs = []int32{
-	0, // 0: cachepb.Cache.Get:input_type -> cachepb.Request
-	1, // 1: cachepb.Cache.Get:output_type -> cachepb.Response
+	0, // 0: cachepb.Cache.Get:input_type -> cachepb.GetRequest
+	1, // 1: cachepb.Cache.Get:output_type -> cachepb.GetResponse
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

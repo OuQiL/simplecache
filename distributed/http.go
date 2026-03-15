@@ -1,15 +1,42 @@
 package distributed
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/OuQiL/simplecache/cachepb/cachepb"
 	"github.com/OuQiL/simplecache/consistenthash"
 )
+
+// 全局HTTP客户端，带连接池
+var httpClient = &http.Client{
+	Transport: &http.Transport{
+		// 连接池配置
+		MaxIdleConns:        100, // 最大空闲连接数
+		MaxIdleConnsPerHost: 10,  // 每个主机的最大空闲连接数
+		MaxConnsPerHost:     20,  // 每个主机的最大连接数
+
+		// 超时配置
+		IdleConnTimeout:     30 * time.Second, // 空闲连接超时时间
+		TLSHandshakeTimeout: 5 * time.Second,  // TLS握手超时
+
+		// 连接建立配置
+		DialContext: (&net.Dialer{
+			Timeout:   5 * time.Second,  // 连接建立超时
+			KeepAlive: 30 * time.Second, // TCP keepalive
+		}).DialContext,
+
+		// 启用HTTP/2
+		ForceAttemptHTTP2: true,
+	},
+}
 
 type HTTPPool struct {
 	sync.RWMutex
@@ -81,7 +108,7 @@ func (p *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	view, err := group.Get(key)
+	view, err := group.Get(context.Background(), key)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -95,15 +122,21 @@ type httpGetter struct {
 	baseURL string
 }
 
-func (h *httpGetter) Get(group string, key string) ([]byte, error) {
+func (h *httpGetter) Get(ctx context.Context, in *cachepb.GetRequest, out *cachepb.GetResponse) ([]byte, error) {
+	group := in.Group
+	key := in.Key
 	u := fmt.Sprintf(
 		"%v%v/%v",
 		h.baseURL,
 		url.QueryEscape(group),
 		url.QueryEscape(key),
 	)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return nil, err
+	}
 
-	res, err := http.Get(u)
+	res, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

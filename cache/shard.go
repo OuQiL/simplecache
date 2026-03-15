@@ -33,6 +33,9 @@ func newShard(maxBytesPerShard int, onEvicted func(key string, value []byte)) *s
 		entries:   make(map[uint64]uint32),
 		onEvicted: onEvicted,
 		totalSize: uint32(maxBytesPerShard),
+		sf: sf{
+			m: make(map[string]*call),
+		},
 	}
 }
 

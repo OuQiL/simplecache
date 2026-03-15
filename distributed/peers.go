@@ -1,5 +1,11 @@
 package distributed
 
+import (
+	"context"
+
+	"github.com/OuQiL/simplecache/cachepb/cachepb"
+)
+
 const (
 	DefaultBasePath = "/_simplecache/"
 	DefaultReplicas = 50
@@ -11,5 +17,5 @@ type PeerPicker interface {
 }
 
 type PeerGetter interface {
-	Get(group string, key string) ([]byte, error)
+	Get(ctx context.Context, in *cachepb.GetRequest, out *cachepb.GetResponse) ([]byte, error)
 }

@@ -34,8 +34,13 @@ func (sf *sf) Do(key string, hash uint64, fn func() ([]byte, bool)) ([]byte, boo
 	sf.mu.Unlock()
 
 	//get
+	defer func() {
+		if r := recover(); r != nil {
+			c.val, c.b = nil, false
+		}
+		c.wg.Done()
+	}()
 	c.val, c.b = fn()
-	c.wg.Done()
 
 	// delete map record
 	sf.mu.Lock()

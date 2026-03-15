@@ -2,16 +2,17 @@ syntax = "proto3";
 
 package cachepb;
 
-option go_package = ".";
+option go_package = "./cachepb";
 
-message Request {
+message GetRequest {
+  string group =2;
   string key = 1;
 }
 
-message Response {
+message GetResponse {
   bytes value = 1;
 }
 
 service Cache {
-  rpc Get(Request) returns (Response);
+  rpc Get(GetRequest) returns (GetResponse);
 }

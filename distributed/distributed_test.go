@@ -1,11 +1,14 @@
 package distributed
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/OuQiL/simplecache/cachepb/cachepb"
 )
 
 func TestHTTPPool(t *testing.T) {
@@ -41,7 +44,7 @@ func TestGroupGet(t *testing.T) {
 
 	loadCounts := make(map[string]int, len(db))
 
-	g := NewGroup("scores", 2<<10, GetterFunc(func(key string) ([]byte, error) {
+	g := NewGroup("scores", 2<<10, 100*time.Millisecond, GetterFunc(func(key string) ([]byte, error) {
 		if v, ok := db[key]; ok {
 			loadCounts[key]++
 			return []byte(v), nil
@@ -50,15 +53,15 @@ func TestGroupGet(t *testing.T) {
 	}))
 
 	for k, v := range db {
-		if view, err := g.Get(k); err != nil || view.String() != v {
+		if view, err := g.Get(context.Background(), k); err != nil || view.String() != v {
 			t.Fatalf("failed to get value of %s", k)
 		}
-		if _, err := g.Get(k); err != nil || loadCounts[k] > 1 {
+		if _, err := g.Get(context.Background(), k); err != nil || loadCounts[k] > 1 {
 			t.Fatalf("cache %s miss", k)
 		}
 	}
 
-	if _, err := g.Get("unknown"); err == nil {
+	if _, err := g.Get(context.Background(), "unknown"); err == nil {
 		t.Fatalf("should get error for unknown key")
 	}
 }
@@ -75,14 +78,19 @@ func TestGroupWithPeers(t *testing.T) {
 	pool := NewHTTPPool(server.URL)
 	pool.Set(server.URL)
 
-	g := NewGroup("test-group", 2<<10, GetterFunc(func(key string) ([]byte, error) {
+	g := NewGroup("test-group", 2<<10, 100*time.Millisecond, GetterFunc(func(key string) ([]byte, error) {
 		return nil, fmt.Errorf("should not be called")
 	}))
 	g.RegisterPeers(pool)
 
 	peerGetter = &httpGetter{baseURL: server.URL + DefaultBasePath}
 
-	_, err := peerGetter.Get("test-group", "test-key")
+	_, err := peerGetter.Get(context.Background(), &cachepb.GetRequest{
+		Group: "test-group",
+		Key:   "test-key",
+	},
+		&cachepb.GetResponse{},
+	)
 	if err != nil {
 		t.Fatalf("failed to get from peer: %v", err)
 	}
@@ -121,7 +129,7 @@ func TestGetterFunc(t *testing.T) {
 }
 
 func TestGetGroup(t *testing.T) {
-	g1 := NewGroup("group1", 2<<10, GetterFunc(func(key string) ([]byte, error) {
+	g1 := NewGroup("group1", 2<<10, 100*time.Millisecond, GetterFunc(func(key string) ([]byte, error) {
 		return []byte("value"), nil
 	}))
 
@@ -137,7 +145,7 @@ func TestGetGroup(t *testing.T) {
 }
 
 func TestGroupName(t *testing.T) {
-	g := NewGroup("test-name", 2<<10, GetterFunc(func(key string) ([]byte, error) {
+	g := NewGroup("test-name", 2<<10, 100*time.Millisecond, GetterFunc(func(key string) ([]byte, error) {
 		return []byte("value"), nil
 	}))
 
@@ -158,7 +166,7 @@ func TestDistributedCacheFlow(t *testing.T) {
 			http.Error(w, "group not found", http.StatusNotFound)
 			return
 		}
-		view, err := group.Get(r.URL.Path[len(DefaultBasePath+"test/"):])
+		view, err := group.Get(context.Background(), r.URL.Path[len(DefaultBasePath+"test/"):])
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -168,8 +176,8 @@ func TestDistributedCacheFlow(t *testing.T) {
 	}))
 	defer server1.Close()
 
-	g := NewGroup("test", 2<<10, GetterFunc(func(key string) ([]byte, error) {
-		time.Sleep(10 * time.Millisecond)
+	g := NewGroup("test", 2<<10, 100*time.Millisecond, GetterFunc(func(key string) ([]byte, error) {
+		time.Sleep(20 * time.Millisecond)
 		if v, ok := db[key]; ok {
 			return []byte(v), nil
 		}
@@ -180,7 +188,7 @@ func TestDistributedCacheFlow(t *testing.T) {
 	pool.Set(server1.URL)
 	g.RegisterPeers(pool)
 
-	view, err := g.Get("key1")
+	view, err := g.Get(context.Background(), "key1")
 	if err != nil {
 		t.Fatalf("Failed to get key1: %v", err)
 	}
@@ -188,7 +196,7 @@ func TestDistributedCacheFlow(t *testing.T) {
 		t.Errorf("Expected 'value1', got '%s'", view.String())
 	}
 
-	view2, err := g.Get("key1")
+	view2, err := g.Get(context.Background(), "key1")
 	if err != nil {
 		t.Fatalf("Failed to get cached key1: %v", err)
 	}

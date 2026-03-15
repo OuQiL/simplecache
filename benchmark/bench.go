@@ -38,11 +38,13 @@ func main() {
 
 func startServer() {
 	// 初始化缓存组
-	distributed.NewGroup(*groupName, 1024*1024*10, distributed.GetterFunc(func(key string) ([]byte, error) {
-		// 模拟回源延迟
-		time.Sleep(10 * time.Millisecond)
-		return []byte(fmt.Sprintf("value for %s", key)), nil
-	}))
+	distributed.NewGroup(*groupName, 1024*1024*10,
+		80*time.Millisecond,
+		distributed.GetterFunc(func(key string) ([]byte, error) {
+			// 模拟回源延迟
+			time.Sleep(10 * time.Millisecond)
+			return []byte(fmt.Sprintf("value for %s", key)), nil
+		}))
 
 	// 启动 HTTP 服务
 	httpPool := distributed.NewHTTPPool(*addr)
@@ -153,6 +155,10 @@ func runBenchmark() {
 					successRequests++
 				} else {
 					errors++
+					// 打印第一个错误
+					if errors == 1 {
+						fmt.Printf("第一个错误: %v (节点: %s, key: %s)\n", err, node, key)
+					}
 				}
 				mu.Unlock()
 
