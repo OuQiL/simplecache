@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/OuQiL/simplecache/cachepb/cachepb"
+	"github.com/OuQiL/simplecache/cachepb"
 )
 
 func TestHTTPPool(t *testing.T) {

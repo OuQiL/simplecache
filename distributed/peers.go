@@ -3,12 +3,12 @@ package distributed
 import (
 	"context"
 
-	"github.com/OuQiL/simplecache/cachepb/cachepb"
+	"github.com/OuQiL/simplecache/cachepb"
 )
 
 const (
 	DefaultBasePath = "/_simplecache/"
-	DefaultReplicas = 50
+	DefaultReplicas = 100
 )
 
 type PeerPicker interface {

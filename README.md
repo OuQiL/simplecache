@@ -1,12 +1,13 @@
 # SimpleCache
 
-
-
 ## 快速开始
+
 ### 1.本地缓存使用
+
 ```bash
 go get github.com/OuQiL/simplecache/cache
 ```
+
 ```go
 package main
 
@@ -54,8 +55,9 @@ func main() {
 }
 
 ```
+
 ### 2.分布式缓存使用
-见quickstart
+
 ```bash
 go get github.com/OuQiL/simplecache/distributed
 ```
@@ -153,35 +155,34 @@ shard (单个分片)
 - ✅ 读多写多的高并发缓存
 - ✅ 短期数据缓存（如 token、会话）
 - ✅ 计数器缓存
-
 - ❌ 需要持久化的数据
 - ❌ 需要遍历所有 key 的场景
 
-
 ## 性能测试
-### 基础性能测试
-```bash
-go run benchmark/bench.go -mode bench -peers localhost:8001,localhost:8002,localhost:8003 -concurrency 50 -requests 10000
-```
-```bash
-开始压测，并发数: 50, 请求数: 10000
-测试节点: [localhost:8001 localhost:8002 localhost:8003]
-预热中...
 
-=== 压测报告 ===
-总请求数: 10000
-成功请求: 10000 (100.00%)
+### grpc测试
+
+```bash
+go run benchmark/bench.go -mode=grpc-bench -peers=localhost:50051,localhost:50052,localhost:50053 -concurrency=1000 -requests=100000
+```
+
+```bash
+=== gRPC 压测报告 ===
+总请求数: 100000
+成功请求: 100000 (100.00%)
 失败请求: 0 (0.00%)
-总耗时: 719.3417ms
-QPS: 13901.60
-平均延迟: 2.150533ms
+总耗时: 1.1908068s
+QPS: 83976.68
+平均延迟: 9.819578ms
 === 测试完成 ===
 ```
 
-### 高并发测试
+### HTTP测试
+
 ```bash
 go run benchmark/bench.go -mode bench -peers localhost:8001,localhost:8002,localhost:8003 -concurrency 1000 -requests 50000
 ```
+
 ```bash
 开始压测，并发数: 1000, 请求数: 50000
 测试节点: [localhost:8001 localhost:8002 localhost:8003]
@@ -198,6 +199,7 @@ QPS: 3893.94
 ```
 
 ### 单点性能测试
+
 ```bash
 go run benchmark/bench.go -mode bench -peers localhost:8001 -concurrency 2000 -requests 50000
 开始压测，并发数: 2000, 请求数: 50000

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/OuQiL/simplecache/cache"
-	"github.com/OuQiL/simplecache/cachepb/cachepb"
+	"github.com/OuQiL/simplecache/cachepb"
 )
 
 var (

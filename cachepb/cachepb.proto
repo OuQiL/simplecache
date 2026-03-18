@@ -4,15 +4,60 @@ package cachepb;
 
 option go_package = "./cachepb";
 
+// 缓存服务
+service CacheService {
+    // 获取缓存
+    rpc Get(GetRequest) returns (GetResponse);
+    // 设置缓存
+    rpc Set(SetRequest) returns (SetResponse);
+    // 删除缓存
+    rpc Delete(DeleteRequest) returns (DeleteResponse);
+    // 健康检查
+    rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
 message GetRequest {
-  string group =2;
-  string key = 1;
+    string group = 1;
+    string key = 2;
 }
 
 message GetResponse {
-  bytes value = 1;
+    bytes value = 1;
+    bool found = 2;
 }
 
-service Cache {
-  rpc Get(GetRequest) returns (GetResponse);
+message SetRequest {
+    string group = 1;
+    string key = 2;
+    bytes value = 3;
+    int64 ttl_seconds = 4;  
+}
+
+message SetResponse {
+    bool success = 1;
+    string error = 2;
+}
+
+message DeleteRequest {
+    string group = 1;
+    string key = 2;
+}
+
+message DeleteResponse {
+    bool success = 1;
+}
+
+message HealthCheckRequest {
+    string service = 1;
+}
+
+message HealthCheckResponse {
+    enum ServingStatus {
+        UNKNOWN = 0;
+        SERVING = 1;
+        NOT_SERVING = 2;
+    }
+    ServingStatus status = 1;
+    int64 entries_count = 2;   
+    int64 memory_used = 3;     
 }

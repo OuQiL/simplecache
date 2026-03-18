@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/OuQiL/simplecache/cachepb/cachepb"
+	"github.com/OuQiL/simplecache/cachepb"
 	"github.com/OuQiL/simplecache/consistenthash"
 )
 
